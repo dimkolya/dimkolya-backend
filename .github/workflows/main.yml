@@ -26,11 +26,12 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        push: true
+        push: ${{ github.event_name == 'push' }}
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/dimkolya-backend:latest
     
     - name: Deploy to VPS
-      uses: appleboy/ssh-action@master
+      if: github.event_name == 'push'
+      uses: appleboy/ssh-action@v1.2.0
       with:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USERNAME }}
@@ -38,5 +39,5 @@ jobs:
         script: |
           cd /root/dimkolya
           docker compose pull
-          docker compose up -d --build
+          docker compose up -d
           docker image prune -f
