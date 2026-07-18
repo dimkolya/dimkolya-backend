@@ -3,7 +3,9 @@ package com.dimkolya.education.backend.service;
 import com.dimkolya.education.backend.dto.user.UserDto;
 import com.dimkolya.education.backend.dto.user.UserRegistrationRequestDto;
 import com.dimkolya.education.backend.dto.user.UserRegistrationResponseDto;
+import com.dimkolya.education.backend.model.Role;
 import com.dimkolya.education.backend.model.User;
+import com.dimkolya.education.backend.repository.RoleRepository;
 import com.dimkolya.education.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -18,11 +20,13 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UserDto getUserByUsername(final String username) {
@@ -68,10 +72,15 @@ public class UserService implements UserDetailsService {
         }
 
         if (!responseDto.isEmailTaken() && !responseDto.isUsernameTaken()) {
+            Role userRole = roleRepository.findByName("ROLE_USER").orElseThrow(
+                    () -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Default role not found")
+            );
+
             User user = new User();
             user.setUsername(requestDto.username());
             user.setEmail(requestDto.email());
             user.setPasswordHash(passwordEncoder.encode(requestDto.password()));
+            user.setRoles(Set.of(userRole));
 
             userRepository.save(user);
 

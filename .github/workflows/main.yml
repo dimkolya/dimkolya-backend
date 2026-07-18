@@ -27,7 +27,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/cucumber-education-backend:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/dimkolya-backend:latest
     
     - name: Deploy to VPS
       uses: appleboy/ssh-action@master
@@ -36,9 +36,7 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_PRIVATE_KEY }}
         script: |
-          cd /root/cucumber-education
-          export JWT_PRIVATE_KEY="${{ secrets.JWT_PRIVATE_KEY }}"
-          export JWT_PUBLIC_KEY="${{ secrets.JWT_PUBLIC_KEY }}"
-          docker-compose pull
-          docker-compose up -d
+          cd /root/dimkolya
+          docker compose pull
+          docker compose up -d --build
           docker image prune -f
