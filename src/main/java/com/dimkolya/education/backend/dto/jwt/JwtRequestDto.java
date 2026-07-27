@@ -1,4 +1,10 @@
 package com.dimkolya.education.backend.dto.jwt;
 
-public record JwtRequestDto(String username, String password) {
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record JwtRequestDto(
+        @NotBlank @Size(max = 20) String username,
+        @NotBlank @Size(max = 64) String password
+) {
 }

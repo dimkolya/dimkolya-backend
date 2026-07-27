@@ -2,7 +2,7 @@ FROM maven:3.9.11-amazoncorretto-24 AS builder
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
-RUN mvn clean install -DskipTests
+RUN mvn --batch-mode clean verify
 
 FROM eclipse-temurin:24-jre-alpine
 WORKDIR /app

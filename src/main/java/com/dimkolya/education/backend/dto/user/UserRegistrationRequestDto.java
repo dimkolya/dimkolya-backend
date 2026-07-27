@@ -19,12 +19,13 @@ public record UserRegistrationRequestDto(
         )
         String username,
 
+        @NotBlank
         @Email
         String email,
 
         @NotBlank
         @Size(min = 8, max = 64, message = "{user.password.size}")
-        @Pattern(regexp = "^[a-zA-Z0-9]+$",
+        @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[0-9]).+$",
                 message = "{user.password.pattern}")
         String password) {
 }
