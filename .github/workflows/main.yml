@@ -65,8 +65,18 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/dimkolya-backend:${{ github.event.pull_request.merge_commit_sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/dimkolya-backend:latest
 
+      - name: Copy deployment configuration to VPS
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_PRIVATE_KEY }}
+          source: "docker-compose.yml,deploy/nginx.conf,deploy/nginx-backend-proxy.conf"
+          target: /root/dimkolya
+          overwrite: true
+
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1
         env:
           IMAGE_TAG: ${{ github.event.pull_request.merge_commit_sha }}
         with:
@@ -77,6 +87,13 @@ jobs:
           script: |
             set -eu
             cd /root/dimkolya
+            install -m 0644 deploy/nginx.conf /etc/nginx/sites-available/dimkolya-backend
+            install -m 0644 deploy/nginx-backend-proxy.conf /etc/nginx/snippets/dimkolya-backend-proxy.conf
+            ln -sfn /etc/nginx/sites-available/dimkolya-backend /etc/nginx/sites-enabled/dimkolya-backend
+            unlink /etc/nginx/sites-enabled/default 2>/dev/null || true
+            nginx -t
             IMAGE_TAG="$IMAGE_TAG" docker compose pull backend
             IMAGE_TAG="$IMAGE_TAG" docker compose up -d --wait backend
+            systemctl reload nginx
+            curl --fail --silent --show-error http://127.0.0.1:8080/actuator/health
             docker image prune -f
